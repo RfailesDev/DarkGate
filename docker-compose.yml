@@ -1,41 +1,33 @@
+# docker-compose.yml (без test_server)
 version: '3.8'
 
 services:
-  admin:  #  Меняем на darkgate-admin
-    build:
-      context: .
-      dockerfile: admin/Dockerfile
-    image: rfailesdev/darkgate-admin:latest  #  Добавляем явное имя образа!
+  admin:
+    build: ./DarkGate/admin
     ports:
       - "5000:5000"
-    environment:
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
-      - SECRET_KEY=${SECRET_KEY:-your_secret_key}
     volumes:
-      - dynamic-proxy-data:/data
-      - dynamic-proxy-certs:/certs
-    networks:
-      - darkgate-proxy-network
+      - ./DarkGate:/app
+      - ./data:/data
+      - ./certs:/certs
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
     depends_on:
       - proxy
+    restart: unless-stopped
 
-  proxy:  # Меняем на darkgate-proxy
-    build:
-      context: .
-      dockerfile: proxy/Dockerfile
-    image: rfailesdev/darkgate-proxy:latest    # Добавляем явное имя образа!
+  proxy:
+    build: ./DarkGate/proxy
     ports:
       - "8080:80"
       - "8443:443"
     volumes:
-      - dynamic-proxy-data:/data
-      - dynamic-proxy-certs:/certs
-    networks:
-      - darkgate-proxy-network
+      - ./DarkGate:/app
+      - ./data:/data
+      - ./certs:/certs
+    restart: unless-stopped
 
 volumes:
-  dynamic-proxy-data:
-  dynamic-proxy-certs:
-
-networks:
-  darkgate-proxy-network:
+    data:
+    certs:
