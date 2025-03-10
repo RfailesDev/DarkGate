@@ -25,8 +25,8 @@ services:
       dockerfile: proxy/Dockerfile
     image: rfailesdev/darkgate-proxy:latest    # Добавляем явное имя образа!
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"
+      - "8443:443"
     volumes:
       - dynamic-proxy-data:/data
       - dynamic-proxy-certs:/certs
