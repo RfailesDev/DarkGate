@@ -1,6 +1,0 @@
-Flask==2.3.3
-Flask-WTF==1.1.1  #  <--  Должно быть здесь!
-Werkzeug==2.3.7
-cryptography==41.0.3
-pyOpenSSL==23.2.0
-WTForms==3.0.1  # WTForms обычно устанавливается вместе с Flask-WTF, но лучше явно указать
