@@ -29,8 +29,6 @@ services:
     volumes:
       - ./data:/data
       - ./certs:/certs
-    depends_on:
-      - test_server # Не забываем, что proxy зависит от test_server
     networks:  # Добавляем секцию networks
       - darkgate_network
 
