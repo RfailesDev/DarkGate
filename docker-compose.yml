@@ -4,7 +4,7 @@ services:
   admin:
     build:
       context: .
-      dockerfile: Dockerfile.admin
+      dockerfile: DarkGate/admin/Dockerfile
     ports:
       - "5000:5000"
     volumes:
@@ -17,7 +17,7 @@ services:
   proxy:
     build:
       context: .
-      dockerfile: Dockerfile.proxy
+      dockerfile: DarkGate/proxy/Dockerfile
     ports:
       - "8080:80"
       - "8443:443"
