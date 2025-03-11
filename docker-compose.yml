@@ -1,35 +1,50 @@
-# docker-compose.yml
 version: '3.8'
 
 services:
-  proxy:
-    build:
-      context: .
-      dockerfile: ./DarkGate/proxy/Dockerfile
-    ports:
-      - "8080:80"
-      - "8443:443"
-    volumes:
-      - data:/data
-      - certs:/certs
-    depends_on:
-      - admin
-    restart: unless-stopped
-
-  admin:
-    build:
-      context: .
-      dockerfile: ./DarkGate/admin/Dockerfile
+  dynamic-proxy-admin:
+    image: rfailesdev/darkgate-admin:latest
+    container_name: darkgate-admin
     ports:
       - "5000:5000"
     volumes:
-      - data:/data
+      - admin_data:/data
       - certs:/certs
     environment:
-      - SECRET_KEY=${SECRET_KEY}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      - dynamic-proxy-server
     restart: unless-stopped
+    networks:
+      - darkgate_network
+
+  dynamic-proxy-server:
+    image: rfailesdev/darkgate-proxy:latest
+    container_name: darkgate-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - proxy_data:/data
+      - certs:/certs
+    restart: unless-stopped
+    networks:
+      - darkgate_network
+
+  test-server:  # Добавляем тестовый сервер
+    build: ./test_server
+    container_name: test-server
+    ports:
+      - "5912:5912"  #  Чтобы не конфликтовать с другими портами
+    restart: unless-stopped
+    networks:
+      - darkgate_network
 
 volumes:
-  data:
+  admin_data:
+  proxy_data:
   certs:
+
+networks:
+  darkgate_network:
+    driver: bridge

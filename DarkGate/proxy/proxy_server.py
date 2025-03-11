@@ -4,7 +4,7 @@ import ssl
 import logging
 import json
 import os
-from aiohttp import web, ClientSession, TCPConnector
+from aiohttp import web, ClientSession, TCPConnector, ClientConnectorError, ServerTimeoutError
 from urllib.parse import urljoin
 import signal
 
@@ -88,9 +88,12 @@ class DynamicProxy:
         # Forward the request
         try:
             return await self.forward_request(request, target_url, https_mode)
+        except (ClientConnectorError, ServerTimeoutError, asyncio.TimeoutError) as e:
+            logger.error(f"Error forwarding request to {target_url}: {type(e).__name__} - {e}")
+            return web.Response(status=502, text=f"Proxy error: {type(e).__name__}")
         except Exception as e:
-            logger.error(f"Error forwarding request to {target_url}: {e}")
-            return web.Response(status=502, text="Proxy error")
+            logger.exception(f"Unexpected error forwarding request to {target_url}: {e}")
+            return web.Response(status=500, text="Internal Proxy Error")
 
     def find_rule(self, domain):
         """Find the most specific matching rule for a domain."""
@@ -122,28 +125,35 @@ class DynamicProxy:
             method = request.method
 
             # Create appropriate request to target
-            async with session.request(
-                    method=method,
-                    url=target_url,
-                    headers=headers,
-                    data=body,
-                    allow_redirects=False,
-                    timeout=30,
-            ) as resp:
-                # Read response body
-                response_body = await resp.read()
+            try:
+                async with session.request(
+                        method=method,
+                        url=target_url,
+                        headers=headers,
+                        data=body,
+                        allow_redirects=False,
+                        timeout=30,  # Set a reasonable timeout
+                ) as resp:
+                    # Read response body
+                    response_body = await resp.read()
 
-                # Create response with same status, headers, and body
-                response = web.Response(
-                    status=resp.status,
-                    body=response_body
-                )
+                    # Create response with same status, headers, and body
+                    response = web.Response(
+                        status=resp.status,
+                        body=response_body
+                    )
 
-                # Copy response headers
-                for header, value in resp.headers.items():
-                    response.headers[header] = value
+                    # Copy response headers
+                    for header, value in resp.headers.items():
+                        response.headers[header] = value
 
-                return response
+                    return response
+            except (ClientConnectorError, ServerTimeoutError, asyncio.TimeoutError) as e:
+                logger.error(f"Error connecting to target {target_url}: {type(e).__name__} - {e}")
+                raise  # Re-raise to be handled by handle_request
+            except Exception as e:
+                logger.exception(f"Unexpected error during request to {target_url}: {e}")
+                raise
 
     def setup_rule_listener(self):
         """Setup listener for rule updates from admin panel."""

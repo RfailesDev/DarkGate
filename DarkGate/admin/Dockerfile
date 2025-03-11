@@ -1,10 +1,12 @@
-# DarkGate/admin/Dockerfile
 FROM python:3.11-slim
+
 WORKDIR /app
 
-COPY ./DarkGate/admin/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
 
-COPY ./DarkGate /app/DarkGate
+RUN pip install --no-cache-dir -r DarkGate/admin/requirements.txt \
+    && rm -rf DarkGate/proxy/ \
+    && rm -rf test_server/
 
-CMD ["gunicorn", "--workers=4", "--bind=0.0.0.0:5000", "--worker-class=uvicorn.workers.UvicornWorker", "DarkGate.admin.app:app"]
+# Указываем команду для запуска приложения с Gunicorn и Uvicorn workers
+CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "DarkGate.admin.app:app", "-b", "0.0.0.0:5000"]

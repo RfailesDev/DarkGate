@@ -1,8 +1,8 @@
+import asyncio
 import subprocess
 import logging
 import os
 import sqlite3
-import asyncio
 from functools import wraps
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, g
@@ -21,16 +21,27 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a-very-secret-key')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
 csrf = CSRFProtect(app)
 
-# Setup logging (лучше использовать logging.config)
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
 # Initialize managers
 rule_manager = RuleManager(db_path='/data/rules.db')
 cert_manager = CertificateManager(cert_dir='/certs')
+
+
+# Setup logging (лучше использовать logging.config)
+# Настройка логирования в файл и stdout
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+# В файл
+file_handler = logging.FileHandler('/app/admin.log')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
+# В stdout
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+logger.addHandler(stream_handler)
+
 
 
 # Database setup for admin users
@@ -112,8 +123,8 @@ class PasswordChangeForm(FlaskForm):
             raise ValidationError("Passwords must match")
 
 
-# Helper functions (сделаны асинхронными)
-async def add_rule_to_db(domain, target_port, https_mode):
+# Helper functions
+def add_rule_to_db(domain, target_port, https_mode):
     try:
         with sqlite3.connect('/data/rules.db') as conn:
             c = conn.cursor()
@@ -130,7 +141,7 @@ async def add_rule_to_db(domain, target_port, https_mode):
         }
 
         # Notify proxy server
-        await rule_manager.notify_rule_change(host='dynamic-proxy-server', port=8899)
+        asyncio.run(rule_manager.notify_rule_change(host='dynamic-proxy-server', port=8899))
 
         return True
     except sqlite3.IntegrityError:
@@ -141,7 +152,7 @@ async def add_rule_to_db(domain, target_port, https_mode):
         return False
 
 
-async def update_rule_in_db(domain, target_port, https_mode):
+def update_rule_in_db(domain, target_port, https_mode):
     try:
         with sqlite3.connect('/data/rules.db') as conn:
             c = conn.cursor()
@@ -162,7 +173,7 @@ async def update_rule_in_db(domain, target_port, https_mode):
         }
 
         # Notify proxy server
-        await rule_manager.notify_rule_change(host='dynamic-proxy-server', port=8899)
+        asyncio.run(rule_manager.notify_rule_change(host='dynamic-proxy-server', port=8899))
 
         return True
     except Exception as e:
@@ -170,7 +181,7 @@ async def update_rule_in_db(domain, target_port, https_mode):
         return False
 
 
-async def delete_rule_from_db(domain):
+def delete_rule_from_db(domain):
     try:
         with sqlite3.connect('/data/rules.db') as conn:
             c = conn.cursor()
@@ -186,7 +197,7 @@ async def delete_rule_from_db(domain):
             del rule_manager.rules[domain]
 
         # Notify proxy server
-        await rule_manager.notify_rule_change(host='dynamic-proxy-server', port=8899)
+        asyncio.run(rule_manager.notify_rule_change(host='dynamic-proxy-server', port=8899))
 
         return True
     except Exception as e:
@@ -194,7 +205,7 @@ async def delete_rule_from_db(domain):
         return False
 
 
-# Routes (сделаны асинхронными)
+# Routes
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -238,14 +249,14 @@ def index():
 
 @app.route('/rules', methods=['GET', 'POST'])
 @login_required
-async def rules():  # <-- async
+def rules():
     form = RuleForm()
     if form.validate_on_submit():
         domain = form.domain.data
         target_port = form.target_port.data
         https_mode = form.https_mode.data
 
-        if await add_rule_to_db(domain, target_port, https_mode):  # <-- await
+        if add_rule_to_db(domain, target_port, https_mode):
             flash(f'Rule for {domain} added successfully!', 'success')
         else:
             flash(f'Failed to add rule for {domain}', 'danger')
@@ -258,7 +269,7 @@ async def rules():  # <-- async
 
 @app.route('/rules/<domain>/edit', methods=['GET', 'POST'])
 @login_required
-async def edit_rule(domain):  # <-- async
+def edit_rule(domain):
     rule = rule_manager.get_rule(domain)
     if not rule:
         flash(f'Rule for {domain} not found', 'danger')
@@ -274,7 +285,7 @@ async def edit_rule(domain):  # <-- async
         target_port = form.target_port.data
         https_mode = form.https_mode.data
 
-        if await update_rule_in_db(domain, target_port, https_mode):  # <-- await
+        if update_rule_in_db(domain, target_port, https_mode):
             flash(f'Rule for {domain} updated successfully!', 'success')
         else:
             flash(f'Failed to update rule for {domain}', 'danger')
@@ -286,8 +297,8 @@ async def edit_rule(domain):  # <-- async
 
 @app.route('/rules/<domain>/delete', methods=['POST'])
 @login_required
-async def delete_rule(domain):  # <-- async
-    if await delete_rule_from_db(domain):  # <-- await
+def delete_rule(domain):
+    if delete_rule_from_db(domain):
         flash(f'Rule for {domain} deleted successfully!', 'success')
     else:
         flash(f'Failed to delete rule for {domain}', 'danger')
@@ -429,16 +440,3 @@ def inject_notify_proxy():
     def notify_proxy():
         asyncio.run(rule_manager.notify_rule_change(host='dynamic-proxy-server', port=8899))
     return dict(notify_proxy=notify_proxy)
-
-
-if __name__ == '__main__':
-    # Настройка логирования в файл для админ-панели
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        filename='/app/admin.log',  # <--  Логируем в файл!
-        filemode='a'  # Дописываем в конец файла
-    )
-    # Для разработки, используй uvicorn:
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000) #  Для разработки
