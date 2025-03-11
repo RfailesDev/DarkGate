@@ -1,33 +1,35 @@
-# docker-compose.yml (без test_server)
+# docker-compose.yml
 version: '3.8'
 
 services:
+  proxy:
+    build:
+      context: .
+      dockerfile: ./DarkGate/proxy/Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - data:/data
+      - certs:/certs
+    depends_on:
+      - admin
+    restart: unless-stopped
+
   admin:
-    build: ./DarkGate/admin
+    build:
+      context: .
+      dockerfile: ./DarkGate/admin/Dockerfile
     ports:
       - "5000:5000"
     volumes:
-      - ./DarkGate:/app
-      - ./data:/data
-      - ./certs:/certs
+      - data:/data
+      - certs:/certs
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-    depends_on:
-      - proxy
-    restart: unless-stopped
-
-  proxy:
-    build: ./DarkGate/proxy
-    ports:
-      - "8080:80"
-      - "8443:443"
-    volumes:
-      - ./DarkGate:/app
-      - ./data:/data
-      - ./certs:/certs
     restart: unless-stopped
 
 volumes:
-    data:
-    certs:
+  data:
+  certs:

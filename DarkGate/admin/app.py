@@ -5,7 +5,7 @@ import sqlite3
 import asyncio
 from functools import wraps
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, g
 from flask_wtf import FlaskForm
 from flask_wtf.csrf import CSRFProtect
 from wtforms import StringField, IntegerField, SelectField, FileField, PasswordField
@@ -422,6 +422,15 @@ def logs():
     return render_template('logs.html', proxy_logs=proxy_logs, admin_logs=admin_logs)
 
 
+
+# Сигнал для уведомления прокси-сервера после старта приложения и входа в application context
+@app.context_processor
+def inject_notify_proxy():
+    def notify_proxy():
+        asyncio.run(rule_manager.notify_rule_change(host='dynamic-proxy-server', port=8899))
+    return dict(notify_proxy=notify_proxy)
+
+
 if __name__ == '__main__':
     # Настройка логирования в файл для админ-панели
     logging.basicConfig(
@@ -430,7 +439,6 @@ if __name__ == '__main__':
         filename='/app/admin.log',  # <--  Логируем в файл!
         filemode='a'  # Дописываем в конец файла
     )
-    # asyncio.run(rule_manager.notify_rule_change(host='dynamic-proxy-server', port=8899)) # Убрали
     # Для разработки, используй uvicorn:
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=5000)  # Для продакшена используй gunicorn, как в Dockerfile
+    uvicorn.run(app, host="0.0.0.0", port=5000) #  Для разработки
