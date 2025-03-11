@@ -3,43 +3,25 @@ version: '3.8'
 services:
   admin:
     build:
-      context: .
-      dockerfile: ./DarkGate/admin/Dockerfile
-    image: dynamic-proxy-admin
+      context: ./DarkGate/admin
+      dockerfile: Dockerfile
     ports:
       - "5000:5000"
     volumes:
       - ./data:/data
       - ./certs:/certs
-      - ./DarkGate/admin:/app/admin
-      - ./DarkGate/common:/app/common
     environment:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - SECRET_KEY=${SECRET_KEY}
-    depends_on:
-      - proxy
-    networks:
-      - proxy-network
-    restart: always
 
   proxy:
     build:
-      context: .
-      dockerfile: ./DarkGate/proxy/Dockerfile
-    image: dynamic-proxy-server
+      context: ./DarkGate/proxy
+      dockerfile: Dockerfile
     ports:
       - "8080:80"
       - "8443:443"
+      - "8899:8899"
     volumes:
       - ./data:/data
       - ./certs:/certs
-      - ./DarkGate/proxy:/app/proxy
-      - ./DarkGate/common:/app/common
-
-    networks:
-      - proxy-network
-    restart: always
-
-networks:
-  proxy-network:
-    driver: bridge
