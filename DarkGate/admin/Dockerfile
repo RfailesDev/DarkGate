@@ -1,12 +1,13 @@
 FROM python:3.11-slim
 
-WORKDIR /app/admin
+# Устанавливаем рабочую директорию в контейнере (корень проекта)
+WORKDIR /app
 
-# Копируем файл зависимостей из текущей директории
-COPY requirements.txt /app/admin/
-RUN pip install --no-cache-dir -r requirements.txt
+# Копируем весь проект в контейнер
+COPY . /app
 
-# Копируем весь исходный код
-COPY . /app/admin
+# Устанавливаем зависимости для админ-панели
+RUN pip install --no-cache-dir -r DarkGate/admin/requirements.txt
 
-CMD ["python", "app.py"]
+# Запускаем админ-панель как модуль, что обеспечивает корректное разрешение относительных импортов
+CMD ["python", "-m", "DarkGate.admin.app"]
