@@ -1,37 +1,38 @@
 version: '3.8'
 
 services:
+  proxy:
+    build:
+      context: .
+      dockerfile: DarkGate/proxy/Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./data/rules.db:/data/rules.db:rw
+      - ./certs:/certs:rw
+    networks:
+      - darkgate_network
+    depends_on:
+      - admin  # Важно, чтобы админка запускалась первой (для создания БД)
+
   admin:
     build:
-      context: ./DarkGate/admin
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: DarkGate/admin/Dockerfile
     ports:
       - "5000:5000"
-    volumes:
-      - ./data:/data
-      - ./certs:/certs
-      - ./DarkGate/admin/admin.log:/app/admin.log # монтируем volume для логов
     environment:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - SECRET_KEY=${SECRET_KEY}
-    depends_on:
-      - proxy
-    networks: # Добавляем секцию networks
-      - darkgate_network
-
-  proxy:
-    build:
-      context: ./DarkGate/proxy
-      dockerfile: Dockerfile
-    ports:
-      - "8080:80"
-      - "8443:443"
     volumes:
-      - ./data:/data
-      - ./certs:/certs
-    networks:  # Добавляем секцию networks
+      - ./data/admin.db:/data/admin.db:rw  # База данных админки
+      - ./data/rules.db:/data/rules.db:rw  # Общая база данных правил (для прокси)
+      - ./certs:/certs:rw  # Общая папка с сертификатами
+      - ./admin_logs:/app/admin.log
+    networks:
       - darkgate_network
 
-networks: # Объявляем сеть
-    darkgate_network:
-        driver: bridge
+networks:
+  darkgate_network:
+    driver: bridge
