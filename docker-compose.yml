@@ -22,8 +22,8 @@ services:
     image: rfailesdev/darkgate-proxy:latest
     container_name: darkgate-proxy
     ports:
-      - "80:80"
-      - "443:443"
+      - "8080:80"
+      - "8443:443"
     volumes:
       - proxy_data:/data
       - certs:/certs
