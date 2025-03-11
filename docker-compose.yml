@@ -1,23 +1,38 @@
-# docker-compose.yml
-version: "3.8"
+version: '3.8'
 
 services:
   admin:
-    build: ./DarkGate/admin
+    build:
+      context: ./DarkGate/admin  # Указываем контекст сборки
+      dockerfile: Dockerfile    # Явное указание Dockerfile (необязательно, но полезно)
     ports:
-      - "5000:5000"
+      - "5001:5000" # Используем другой порт для админки, чтобы избежать конфликтов
     volumes:
-      - ./data:/data
-      - ./certs:/certs
+      - ./data:/data        # Монтируем директорию для данных
+      - ./certs:/certs      # Монтируем директорию для сертификатов
     environment:
-      - ADMIN_PASSWORD=your_admin_password
-      - SECRET_KEY=your_secret_key
+      - SECRET_KEY=${SECRET_KEY}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+    networks:
+      - darkgate-network
+    depends_on:
+      - proxy
+    restart: always  # Добавили автоматический перезапуск
 
   proxy:
-    build: ./DarkGate/proxy
+    build:
+      context: ./DarkGate/proxy   # Указываем контекст сборки
+      dockerfile: Dockerfile
     ports:
-      - "8080:80"
-      - "8443:443"
+      - "81:80"        # Открываем порты 80
+      - "444:443"        # и 443 наружу
     volumes:
       - ./data:/data
       - ./certs:/certs
+    networks:
+      - darkgate-network
+    restart: always # Добавили автоматический перезапуск
+
+networks:
+  darkgate-network:  # Объявляем сеть
+    driver: bridge

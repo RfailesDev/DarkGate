@@ -1,8 +1,17 @@
-# Используем корневой контекст проекта
 FROM python:3.10-slim
 WORKDIR /app
+
+# Создаем директории заранее
 RUN mkdir -p /data /certs
-COPY DarkGate/requirements.txt ./DarkGate/admin/requirements.txt
-RUN pip install --no-cache-dir -r DarkGate/admin/requirements.txt
+
+# Копируем requirements.txt.  Путь относительный.
+COPY requirements.txt ./
+
+# Устанавливаем зависимости
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Копируем весь код админки
 COPY . .
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "DarkGate.admin.app:app"]
+
+# Запускаем приложение
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:5000", "--workers", "4", "--threads", "4"]

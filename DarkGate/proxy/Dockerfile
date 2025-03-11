@@ -1,7 +1,17 @@
 FROM python:3.10-slim
 WORKDIR /app
+
+# Создаем директории заранее
 RUN mkdir -p /data /certs
-COPY DarkGate/proxy/requirements.txt ./DarkGate/proxy/requirements.txt
-RUN pip install --no-cache-dir -r DarkGate/proxy/requirements.txt
+
+# Копируем requirements.txt
+COPY requirements.txt ./
+
+# Устанавливаем зависимости
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Копируем весь код прокси
 COPY . .
-CMD ["python", "-m", "DarkGate.proxy.app"]
+
+# Запускаем приложение
+CMD ["python", "app.py"]

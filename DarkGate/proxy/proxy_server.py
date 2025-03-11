@@ -8,9 +8,9 @@ from aiohttp import web, ClientSession, TCPConnector, ClientConnectorError, Serv
 from urllib.parse import urljoin
 import signal
 
-# ИСПРАВЛЕННЫЕ ИМПОРТЫ
-from ..common.rule_manager import RuleManager
-from ..common.certificate_manager import CertificateManager
+# Правильные импорты (относительно корня проекта, а НЕ текущего файла!)
+from DarkGate.common.rule_manager import RuleManager  #  Импортируем из DarkGate.common
+from DarkGate.common.certificate_manager import CertificateManager # Импортируем из DarkGate.common
 
 logging.basicConfig(
     level=logging.INFO,
