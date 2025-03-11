@@ -31,15 +31,6 @@ services:
     networks:
       - darkgate_network
 
-  test-server:  # Добавляем тестовый сервер
-    build: ./test_server
-    container_name: test-server
-    ports:
-      - "5912:5912"  #  Чтобы не конфликтовать с другими портами
-    restart: unless-stopped
-    networks:
-      - darkgate_network
-
 volumes:
   admin_data:
   proxy_data:
