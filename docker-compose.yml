@@ -3,13 +3,13 @@ version: '3.8'
 services:
   admin:
     build:
-      context: ./DarkGate/admin  # Указываем контекст сборки
-      dockerfile: Dockerfile    # Явное указание Dockerfile (необязательно, но полезно)
+      context: ./dg_app/admin  #  Изменили путь
+      dockerfile: Dockerfile
     ports:
-      - "5001:5000" # Используем другой порт для админки, чтобы избежать конфликтов
+      - "5001:5000"
     volumes:
-      - ./data:/data        # Монтируем директорию для данных
-      - ./certs:/certs      # Монтируем директорию для сертификатов
+      - ./data:/data
+      - ./certs:/certs
     environment:
       - SECRET_KEY=${SECRET_KEY}
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
@@ -17,22 +17,22 @@ services:
       - darkgate-network
     depends_on:
       - proxy
-    restart: always  # Добавили автоматический перезапуск
+    restart: always
 
   proxy:
     build:
-      context: ./DarkGate/proxy   # Указываем контекст сборки
+      context: ./dg_app/proxy  # Изменили путь
       dockerfile: Dockerfile
     ports:
-      - "81:80"        # Открываем порты 80
-      - "444:443"        # и 443 наружу
+      - "81:80"
+      - "444:443"
     volumes:
       - ./data:/data
       - ./certs:/certs
     networks:
       - darkgate-network
-    restart: always # Добавили автоматический перезапуск
+    restart: always
 
 networks:
-  darkgate-network:  # Объявляем сеть
+  darkgate-network:
     driver: bridge
