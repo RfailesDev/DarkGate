@@ -1,38 +1,45 @@
 version: '3.8'
 
 services:
+  admin:
+    build:
+      context: .
+      dockerfile: ./DarkGate/admin/Dockerfile
+    image: dynamic-proxy-admin
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/data
+      - ./certs:/certs
+      - ./DarkGate/admin:/app/admin
+      - ./DarkGate/common:/app/common
+    environment:
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - SECRET_KEY=${SECRET_KEY}
+    depends_on:
+      - proxy
+    networks:
+      - proxy-network
+    restart: always
+
   proxy:
     build:
       context: .
-      dockerfile: DarkGate/proxy/Dockerfile
+      dockerfile: ./DarkGate/proxy/Dockerfile
+    image: dynamic-proxy-server
     ports:
       - "8080:80"
       - "8443:443"
     volumes:
-      - ./data/rules.db:/data/rules.db:rw
-      - ./certs:/certs:rw
-    networks:
-      - darkgate_network
-    depends_on:
-      - admin  # Важно, чтобы админка запускалась первой (для создания БД)
+      - ./data:/data
+      - ./certs:/certs
+      - ./DarkGate/proxy:/app/proxy
+      - ./DarkGate/common:/app/common
 
-  admin:
-    build:
-      context: .
-      dockerfile: DarkGate/admin/Dockerfile
-    ports:
-      - "5000:5000"
-    environment:
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - SECRET_KEY=${SECRET_KEY}
-    volumes:
-      - ./data/admin.db:/data/admin.db:rw  # База данных админки
-      - ./data/rules.db:/data/rules.db:rw  # Общая база данных правил (для прокси)
-      - ./certs:/certs:rw  # Общая папка с сертификатами
-      - ./admin_logs:/app/admin.log
     networks:
-      - darkgate_network
+      - proxy-network
+    restart: always
 
 networks:
-  darkgate_network:
+  proxy-network:
     driver: bridge

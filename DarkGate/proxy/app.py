@@ -2,10 +2,10 @@
 import asyncio
 import logging
 
-# Исправленные импорты
-from DarkGate.proxy.proxy_server import DynamicProxy
-from DarkGate.common.rule_manager import RuleManager
-from DarkGate.common.certificate_manager import CertificateManager
+# ИСПРАВЛЕННЫЕ ИМПОРТЫ (относительный импорт)
+from .proxy_server import DynamicProxy  # . означает "в текущей директории"
+from ..common.rule_manager import RuleManager
+from ..common.certificate_manager import CertificateManager
 
 logging.basicConfig(
     level=logging.INFO,

@@ -1,18 +1,16 @@
-# DarkGate/proxy/Dockerfile
+# proxy/Dockerfile
+
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Сначала копируем только файл с зависимостями, чтобы использовать кэширование
-COPY DarkGate/proxy/requirements.txt ./requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+COPY ./proxy/requirements.txt /app/proxy/
+COPY ./common /app/common
+COPY ./proxy /app/proxy
 
-# Потом копируем все остальные файлы приложения
-COPY DarkGate/proxy ./proxy
-COPY DarkGate/common ./common
-COPY DarkGate/__init__.py ./__init__.py
+RUN pip install --no-cache-dir -r /app/proxy/requirements.txt
 
-# Установка PYTHONPATH
-ENV PYTHONPATH=/app:$PYTHONPATH
+# No EXPOSE needed here, as the ports are exposed by docker-compose
+# and handled by the proxy server itself
 
 CMD ["python", "proxy/app.py"]

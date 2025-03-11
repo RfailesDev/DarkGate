@@ -12,9 +12,9 @@ from wtforms import StringField, IntegerField, SelectField, FileField, PasswordF
 from wtforms.validators import DataRequired, NumberRange, ValidationError
 from werkzeug.security import generate_password_hash, check_password_hash
 
-# Импорты из нашего пакета DarkGate
-from DarkGate.common.rule_manager import RuleManager
-from DarkGate.common.certificate_manager import CertificateManager
+# ИСПРАВЛЕННЫЕ ИМПОРТЫ (относительный импорт)
+from ..common.rule_manager import RuleManager  # .. означает "на уровень выше"
+from ..common.certificate_manager import CertificateManager
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'a-very-secret-key')
@@ -41,7 +41,6 @@ logger.addHandler(file_handler)
 stream_handler = logging.StreamHandler()
 stream_handler.setFormatter(formatter)
 logger.addHandler(stream_handler)
-
 
 
 # Database setup for admin users
