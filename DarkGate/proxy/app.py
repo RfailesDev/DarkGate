@@ -1,11 +1,9 @@
-# proxy/app.py
 import asyncio
 import logging
 
-# ИСПРАВЛЕННЫЕ ИМПОРТЫ (относительный импорт)
-from .proxy_server import DynamicProxy  # . означает "в текущей директории"
-from ..common.rule_manager import RuleManager
-from ..common.certificate_manager import CertificateManager
+from DarkGate.proxy.proxy_server import DynamicProxy
+from DarkGate.common.rule_manager import RuleManager
+from DarkGate.common.certificate_manager import CertificateManager
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,22 +11,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 async def main():
-    # Initialize components
     rule_manager = RuleManager(db_path='/data/rules.db')
     cert_manager = CertificateManager(cert_dir='/certs')
-
-    # Initialize proxy with loaded rules
     proxy = DynamicProxy(rule_manager, cert_manager)
-
-    # Start the proxy server
     await proxy.start_server()
-
-    # Keep the server running
     while True:
         await asyncio.sleep(3600)
-
 
 if __name__ == '__main__':
     try:

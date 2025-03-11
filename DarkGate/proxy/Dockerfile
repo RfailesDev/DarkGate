@@ -1,17 +1,7 @@
-# DarkGate/proxy/Dockerfile
 FROM python:3.10-slim
-
 WORKDIR /app
-
-# Создаем каталоги для данных и сертификатов
 RUN mkdir -p /data /certs
-
-# Копируем и устанавливаем зависимости
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Копируем весь исходный код
+COPY DarkGate/proxy/requirements.txt ./DarkGate/proxy/requirements.txt
+RUN pip install --no-cache-dir -r DarkGate/proxy/requirements.txt
 COPY . .
-
-# Запускаем приложение
-CMD ["python", "app.py"]
+CMD ["python", "-m", "DarkGate.proxy.app"]

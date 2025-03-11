@@ -1,9 +1,10 @@
-# docker-compose.yml
 version: "3.8"
 
 services:
   admin:
-    build: ./DarkGate/admin
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
     ports:
       - "5000:5000"
     volumes:
@@ -14,7 +15,9 @@ services:
       - SECRET_KEY=your_secret_key
 
   proxy:
-    build: ./DarkGate/proxy
+    build:
+      context: .
+      dockerfile: Dockerfile.proxy
     ports:
       - "8080:80"
       - "8443:443"

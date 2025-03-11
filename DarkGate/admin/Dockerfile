@@ -1,17 +1,8 @@
-# DarkGate/admin/Dockerfile
+# Используем корневой контекст проекта
 FROM python:3.10-slim
-
 WORKDIR /app
-
-# Создаем каталоги для данных и сертификатов
 RUN mkdir -p /data /certs
-
-# Копируем и устанавливаем зависимости
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Копируем весь исходный код
+COPY DarkGate/requirements.txt ./DarkGate/admin/requirements.txt
+RUN pip install --no-cache-dir -r DarkGate/admin/requirements.txt
 COPY . .
-
-# Запускаем приложение с Gunicorn на порту 5000
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "DarkGate.admin.app:app"]
