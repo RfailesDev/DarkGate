@@ -1,27 +1,23 @@
-version: '3.8'
+# docker-compose.yml
+version: "3.8"
 
 services:
   admin:
-    build:
-      context: .
-      dockerfile: DarkGate/admin/Dockerfile
+    build: ./DarkGate/admin
     ports:
       - "5000:5000"
     volumes:
       - ./data:/data
       - ./certs:/certs
     environment:
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - SECRET_KEY=${SECRET_KEY}
+      - ADMIN_PASSWORD=your_admin_password
+      - SECRET_KEY=your_secret_key
 
   proxy:
-    build:
-      context: .
-      dockerfile: DarkGate/proxy/Dockerfile
+    build: ./DarkGate/proxy
     ports:
       - "8080:80"
       - "8443:443"
-      - "8899:8899"
     volumes:
       - ./data:/data
       - ./certs:/certs

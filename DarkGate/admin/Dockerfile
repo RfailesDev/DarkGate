@@ -1,13 +1,17 @@
-FROM python:3.11-slim
+# DarkGate/admin/Dockerfile
+FROM python:3.10-slim
 
-# Устанавливаем рабочую директорию в контейнере (корень проекта)
 WORKDIR /app
 
-# Копируем весь проект в контейнер
-COPY . /app
+# Создаем каталоги для данных и сертификатов
+RUN mkdir -p /data /certs
 
-# Устанавливаем зависимости для админ-панели
-RUN pip install --no-cache-dir -r DarkGate/admin/requirements.txt
+# Копируем и устанавливаем зависимости
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Запускаем админ-панель как модуль, что обеспечивает корректное разрешение относительных импортов
-CMD ["python", "-m", "DarkGate.admin.app"]
+# Копируем весь исходный код
+COPY . .
+
+# Запускаем приложение с Gunicorn на порту 5000
+CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
