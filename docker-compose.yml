@@ -1,41 +1,39 @@
 version: '3.8'
 
 services:
-  dynamic-proxy-admin:
-    image: rfailesdev/darkgate-admin:latest
-    container_name: darkgate-admin
+  admin:
+    build:
+      context: ./DarkGate/admin
+      dockerfile: Dockerfile
     ports:
       - "5000:5000"
     volumes:
-      - admin_data:/data
-      - certs:/certs
+      - ./data:/data
+      - ./certs:/certs
+      - ./DarkGate/admin/admin.log:/app/admin.log # монтируем volume для логов
     environment:
       - ADMIN_PASSWORD=${ADMIN_PASSWORD}
       - SECRET_KEY=${SECRET_KEY}
     depends_on:
-      - dynamic-proxy-server
-    restart: unless-stopped
-    networks:
+      - proxy
+    networks: # Добавляем секцию networks
       - darkgate_network
 
-  dynamic-proxy-server:
-    image: rfailesdev/darkgate-proxy:latest
-    container_name: darkgate-proxy
+  proxy:
+    build:
+      context: ./DarkGate/proxy
+      dockerfile: Dockerfile
     ports:
       - "8080:80"
       - "8443:443"
     volumes:
-      - proxy_data:/data
-      - certs:/certs
-    restart: unless-stopped
-    networks:
+      - ./data:/data
+      - ./certs:/certs
+    depends_on:
+      - test_server # Не забываем, что proxy зависит от test_server
+    networks:  # Добавляем секцию networks
       - darkgate_network
 
-volumes:
-  admin_data:
-  proxy_data:
-  certs:
-
-networks:
-  darkgate_network:
-    driver: bridge
+networks: # Объявляем сеть
+    darkgate_network:
+        driver: bridge

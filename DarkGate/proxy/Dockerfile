@@ -1,11 +1,14 @@
+# DarkGate/proxy/Dockerfile
 FROM python:3.11-slim
 
 WORKDIR /app
 
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
 COPY . .
 
-RUN pip install --no-cache-dir -r DarkGate/proxy/requirements.txt \
-    && rm -rf DarkGate/admin/ \
-    && rm -rf test_server/
+# Добавляем /app в PYTHONPATH
+ENV PYTHONPATH=/app:$PYTHONPATH
 
-CMD ["python", "DarkGate/proxy/app.py"]
+CMD ["python", "proxy/app.py"]

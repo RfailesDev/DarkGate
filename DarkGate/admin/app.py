@@ -141,7 +141,7 @@ def add_rule_to_db(domain, target_port, https_mode):
         }
 
         # Notify proxy server
-        asyncio.run(rule_manager.notify_rule_change(host='dynamic-proxy-server', port=8899))
+        asyncio.run(rule_manager.notify_rule_change(host='proxy', port=8899))
 
         return True
     except sqlite3.IntegrityError:
@@ -173,7 +173,7 @@ def update_rule_in_db(domain, target_port, https_mode):
         }
 
         # Notify proxy server
-        asyncio.run(rule_manager.notify_rule_change(host='dynamic-proxy-server', port=8899))
+        asyncio.run(rule_manager.notify_rule_change(host='proxy', port=8899))
 
         return True
     except Exception as e:
@@ -197,7 +197,7 @@ def delete_rule_from_db(domain):
             del rule_manager.rules[domain]
 
         # Notify proxy server
-        asyncio.run(rule_manager.notify_rule_change(host='dynamic-proxy-server', port=8899))
+        asyncio.run(rule_manager.notify_rule_change(host='proxy', port=8899))
 
         return True
     except Exception as e:
@@ -346,7 +346,7 @@ def letsencrypt_certificate():
         if cert_manager.request_letsencrypt_cert(domain, email):
             flash(f'Certificate for {domain} obtained successfully!', 'success')
             # Notify proxy to reload certificates
-            asyncio.run(rule_manager.notify_rule_change(host='dynamic-proxy-server', port=8899))
+            asyncio.run(rule_manager.notify_rule_change(host='proxy', port=8899))
         else:
             flash(f'Failed to obtain certificate for {domain}', 'danger')
 
@@ -438,5 +438,5 @@ def logs():
 @app.context_processor
 def inject_notify_proxy():
     def notify_proxy():
-        asyncio.run(rule_manager.notify_rule_change(host='dynamic-proxy-server', port=8899))
+        asyncio.run(rule_manager.notify_rule_change(host='proxy', port=8899))  # Изменено!
     return dict(notify_proxy=notify_proxy)
